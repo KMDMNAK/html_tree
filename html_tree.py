@@ -20,7 +20,6 @@ class node:
         print("end tag:",html[self.index[1][0]:self.index[1][1]])
         
 class tree:
-    
     def __init__(self,xml,Text=True,limit=1):
         """
         
@@ -51,7 +50,7 @@ class tree:
         一番最初には<script>等の要除外タグは来ない前提\n
         explorer特有のhtmlの挙動を考慮する必要がある."""
         
-        thisistag,index_t=self.search_tag(skip=skip)
+        thisistag,index_t=self.get_nexttag(skip=skip)
         
         if(thisistag):
             self.c+=1
@@ -91,7 +90,6 @@ class tree:
                         thisnode.list.append(child_node)
                         self.text_number += 1
                         add_text=re.sub(r'\n|\r',"",self.xml[index_blast:child_node.index[0][0]])
-                        print(add_text)
                         if(not add_text in ["",'',' ',None]):
                             thisnode.text.append((self.text_number,add_text))
                             
@@ -102,7 +100,7 @@ class tree:
                 
                 if(not add_text in ["",'',' ',None]):
                     thisnode.text.append((self.text_number,add_text))
-                    
+            
             thisnode.lastchild_number=self.c
             
             if(self.Text):#textの取得
@@ -112,12 +110,16 @@ class tree:
                     text+=w[1]
                 if(len(text.replace(" ",""))>=self.limit):
                     self.textnodes.append(thisnode)
+                    
         else:#終タグだった場合
             thisnode=None
-        
+        """if(thisnode!=None):
+            print("start :",thisnode.index[0],self.xml[thisnode.index[0][0]:thisnode.index[0][1]])
+            print("end   :",thisnode.index[1],self.xml[thisnode.index[1][0]:thisnode.index[1][1]])
+            print("\n")"""
         return thisistag,index_t,thisnode
         
-    def search_tag(self,skip):#boolean,taple
+    def get_nexttag(self,skip):#boolean,taple
         """skip以降最初に現れるタグが終タグか始タグかを判別\n
         True if next tag is not end tag otherwise False \n
         return boolean and index(integer)
@@ -131,9 +133,9 @@ class tree:
             return False,(skip,len(self.xml))
         
         if(match.group()[1:4]=="!--"):
-            if((not "\[if" in match.group())&(not "endif" in match.group())):
+            if((not "[if" in match.group())&(not "endif" in match.group())):
                 match=re.search(r'<!--.*?-->',self.xml[skip:],flags=re.S)
-                print("match:",match)
+                #print("match:",match.group())
         isStart=True
         if(match.group()[1]=="/"):
             isStart=False
@@ -167,12 +169,11 @@ class tree:
             self.tags.append(node_.tag)
         return node_
     
-    def search_tags(self,*tags,tree_index=0):
+    def search_specifytag(self,*tags,tree_index=0):
         """
         指定したタグのついた木を取得する。\n
         first:検索する木のindex
         """
-        
         quence=[self.trees[tree_index]]
         targets=[quence[0]] if(quence[0].tag in tags) else []
         while(quence!=[]):
@@ -185,7 +186,7 @@ class tree:
             quence=quence_copy
         print("tags",tags)
         return targets
-    
+        
     def search_attrs(self):
         pass
     
@@ -199,10 +200,24 @@ class tree:
             self.text=sorted(self.text, key=lambda x:x[0])
         for w in self.text:
             print(w[1])
-            
+    
+    
 def conditional_comment():
     """
     check whether explorer version satisfy comment's version \n
-    
     """
     pass
+
+def sort_index(list_,index_number):
+    """
+    list=[(index(tuple),value),(index(tuple),value)]
+    index(tuple)=(2,3,4) ,index_number=2 ⇒3
+    """
+    index_list=[]
+    for element in list_:
+        index_list.append(element[0][index_number])
+        
+class cubu:
+    def __init__(self,right=None,left=None):
+        self.right=right
+        self.right=left
