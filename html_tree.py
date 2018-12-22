@@ -4,12 +4,13 @@ import explorer
 import tags_learner
 
 class node:
+    
     def __init__(self,first_index,*attrs):
         """
         Args:
             first_index (int two size tuple): index of this node's start tag in given html
         """
-        
+        self.depth=0
         self.index=[first_index,(0,0)]
         self.list,self.text=[],[]
         self.tag,self.parent="",None
@@ -18,7 +19,7 @@ class node:
     def check_index(self,html):
         print("start tag:",html[self.index[0][0]:self.index[0][1]])
         print("end tag:",html[self.index[1][0]:self.index[1][1]])
-        
+    
 class tree:
     def __init__(self,xml,Text=True,limit=1):
         """
@@ -33,7 +34,7 @@ class tree:
         self.textnodes=[]#textがlimitを超えたnodeの格納場所
         self.c=0
         self.text_number=0
-        
+    
     def make_tree(self,IE_version='IE 9'):
         """IE_version:条件付きコメントに対する挙動を設定する。\n
         IE_version in {'IE 9','IE 8','IE 7','IE 6'}"""
@@ -45,10 +46,16 @@ class tree:
         
     def recursive(self,skip=0,parent=None):
         
-        """次タグを見つける操作をrecursiveで行う。\n
+        """
+        次タグを見つける操作をrecursiveで行う。\n
+        
         次のタグを検知.\n
+        
         一番最初には<script>等の要除外タグは来ない前提\n
-        explorer特有のhtmlの挙動を考慮する必要がある."""
+        
+        explorer特有のhtmlの挙動を考慮する必要がある.
+        
+        """
         
         thisistag,index_t=self.get_nexttag(skip=skip)
         
@@ -66,6 +73,7 @@ class tree:
             elif(thisnode.tag[0]=='!'):#コメントの処理
                 sentence=self.xml[index_t[0]:index_t[1]]
                 if(re.search(r'\[if.*?\]',sentence,flags=re.S)!=None):#条件付きコメント
+                    
                     if(explorer.html_IE(sentence,self.version)):#非コメントとして読む
                         thisnode.index[1]=index_t
                     else:#コメントとして読む
@@ -73,13 +81,12 @@ class tree:
                         last=re.search(pat,self.xml[index_t[1]:],flags=re.S).span()
                         last=(last[0]+index_t[1],last[1]+index_t[1])
                         index_t,thisnode.index[1]=last,last#当タグの終タグに指定
-                        #print("get_endif")
                 else:
                     thisnode.index[1]=index_t
                     
             elif(thisnode.tag in self.blacklist):
                 thisnode.index[1]=index_t
-                
+            
             else:#普通の始タグだった場合
                 check=True
                 while(check):
@@ -89,18 +96,24 @@ class tree:
                     if(child_node!=None):
                         thisnode.list.append(child_node)
                         self.text_number += 1
-                        add_text=re.sub(r'\n|\r',"",self.xml[index_blast:child_node.index[0][0]])
+                        add_text=re.sub(r'\t|\n|\r',"",self.xml[index_blast:child_node.index[0][0]])
+                        
                         if(not add_text in ["",'',' ',None]):
-                            thisnode.text.append((self.text_number,add_text))
+                            thisnode.text.append([self.text_number+thisnode.depth,add_text])
+                            if(thisnode.list[-1].text!=[]):
+                                thisnode.text[-1][0]=thisnode.list[-1].text[-1][0]+1
                             
+                        if((len(child_node.list)==0)&(thisnode.text!=[])&(child_node.text!=[])):#葉の中のテキスト処理
+                            thisnode.list[-1].text[0][0],thisnode.text[-1][0]=thisnode.text[-1][0],child_node.text[0][0]
+                        
                 thisnode.index[1]=index_t
                 
                 self.text_number += 1
                 add_text = re.sub(r'\t|\n|\r',"",self.xml[index_blast:index_t[0]])
                 
                 if(not add_text in ["",'',' ',None]):
-                    thisnode.text.append((self.text_number,add_text))
-            
+                    thisnode.text.append([self.text_number+thisnode.depth,add_text])
+                
             thisnode.lastchild_number=self.c
             
             if(self.Text):#textの取得
@@ -108,6 +121,7 @@ class tree:
                 text=""
                 for w in thisnode.text:
                     text+=w[1]
+                    
                 if(len(text.replace(" ",""))>=self.limit):
                     self.textnodes.append(thisnode)
                     
@@ -149,6 +163,8 @@ class tree:
         
         #parentに指定
         node_.parent=parent_node
+        if(parent_node!=None):
+            node_.depth=parent_node.depth+1
         
         #タグの中身を分割
         pat=r'<(.*?)>'
@@ -172,7 +188,7 @@ class tree:
     def search_specifytag(self,*tags,tree_index=0):
         """
         指定したタグのついた木を取得する。\n
-        first:検索する木のindex
+        first:検索する根のindex
         """
         quence=[self.trees[tree_index]]
         targets=[quence[0]] if(quence[0].tag in tags) else []
@@ -200,8 +216,7 @@ class tree:
             self.text=sorted(self.text, key=lambda x:x[0])
         for w in self.text:
             print(w[1])
-    
-    
+        
 def conditional_comment():
     """
     check whether explorer version satisfy comment's version \n
@@ -216,8 +231,8 @@ def sort_index(list_,index_number):
     index_list=[]
     for element in list_:
         index_list.append(element[0][index_number])
+class leaner:
+    def __init__(self):
         
-class cubu:
-    def __init__(self,right=None,left=None):
-        self.right=right
-        self.right=left
+    def setURLs(self,*urls):
+        
