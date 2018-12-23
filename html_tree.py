@@ -10,6 +10,7 @@ class node:
         Args:
             first_index (int two size tuple): index of this node's start tag in given html
         """
+        
         self.depth=0
         self.index=[first_index,(0,0)]
         self.list,self.text=[],[]
@@ -28,7 +29,7 @@ class tree:
         
         self.xml,self.tags,self.blacklist,self.c=xml,[],tags_learner.get_blacklist(True),0
         print("black:",self.blacklist)
-        #whether you want to get texts of html
+        #whether you want to get texts of html  
         self.Text=Text
         self.limit=limit#textにlimit以上の文字数のあるnodeを取得する。
         self.textnodes=[]#textがlimitを超えたnodeの格納場所
@@ -206,14 +207,16 @@ class tree:
     def search_attrs(self):
         pass
     
-    def print_text(self,Sort=True):
+    def get_text(self,Sort=True):
         self.text=[]
         
         for w in self.textnodes:
             self.text.extend(w.text)
-            
+        
         if(Sort):
             self.text=sorted(self.text, key=lambda x:x[0])
+        
+    def print_text(self):
         for w in self.text:
             print(w[1])
         
@@ -231,8 +234,3 @@ def sort_index(list_,index_number):
     index_list=[]
     for element in list_:
         index_list.append(element[0][index_number])
-class leaner:
-    def __init__(self):
-        
-    def setURLs(self,*urls):
-        
